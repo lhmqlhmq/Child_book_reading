@@ -17,7 +17,7 @@ npm run dev
 npm run set-password -- "你的家庭密码"
 ```
 
-然后提交 `src/passwordHash.js` 的变化。当前示例密码是 `family`，仅用于演示，首次发布前请替换。
+然后提交 `src/passwordHash.js` 的变化。首次发布前请设置你自己的家庭密码。
 
 ## 添加新书
 
