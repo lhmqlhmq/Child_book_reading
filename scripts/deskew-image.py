@@ -37,11 +37,23 @@ def find_page(image):
         polygon = cv2.approxPolyDP(contour, 0.03 * perimeter, True)
         if len(polygon) == 4 and cv2.isContourConvex(polygon):
             candidates.append((area, polygon.reshape(4, 2)))
-    if not candidates:
-        return None
-    _, points = max(candidates, key=lambda candidate: candidate[0])
-    points = order_points(points / scale)
-    return points
+    if candidates:
+        _, points = max(candidates, key=lambda candidate: candidate[0])
+        return order_points(points / scale)
+
+    # Many book photos have a clear bright paper region but no closed four-sided
+    # edge contour. Use its minimum-area rectangle as a conservative fallback.
+    for threshold in (150, 170, 190):
+        bright = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)[1]
+        bright = cv2.morphologyEx(bright, cv2.MORPH_CLOSE, np.ones((31, 31), np.uint8))
+        bright = cv2.morphologyEx(bright, cv2.MORPH_OPEN, np.ones((9, 9), np.uint8))
+        regions, _ = cv2.findContours(bright, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        regions = [region for region in regions if image_area * 0.25 < cv2.contourArea(region) < image_area * 0.95]
+        if regions:
+            region = max(regions, key=cv2.contourArea)
+            box = cv2.boxPoints(cv2.minAreaRect(region))
+            return order_points(box / scale)
+    return None
 
 
 def transform(image, points):
