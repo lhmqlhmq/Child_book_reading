@@ -10,21 +10,24 @@ Files under `sources/` are read-only reference material. Do not edit, rename, mo
 
 When the user provides a PDF or page photos, process and publish the book in this order:
 
-1. Identify the Dutch title, Chinese title, author, and page count from the source. Render and visually inspect every page. Preserve pure illustration pages with an empty `paragraphs` array.
-2. Create the book under `public/private-books/<slug>/`. This directory is the local family library and is intentionally ignored by Git.
-3. Use the reader schema below. Do not invent a different schema and do not use the similarly named `public/private-books` directory in another workspace.
-4. Add one entry to `public/private-books/index.json`:
+1. Confirm the authoritative project directory, upload order, page count, and duplicate/missing pages before creating files.
+2. Render or inspect every page first and record the visual text-block count for each page. Preserve pure illustration pages with an empty `paragraphs` array.
+3. Extract text by visual block, not by ordinary line breaks or individual sentences. A heading belongs with the following body when they form one visual block; a clearly separate heading remains separate.
+4. Translate each Dutch block one-to-one into Chinese, preserving page order. Do not merge unrelated blocks or split one block merely because it wraps onto several lines.
+5. Create the book under `public/private-books/<slug>/`. This directory is the local family library and is intentionally ignored by Git. Do not create final book files in a scratch directory.
+6. Use the reader schema below. Do not invent a different schema and do not use the similarly named `public/private-books` directory in another workspace.
+7. Add one entry to `public/private-books/index.json`:
 
    `{ "slug": "<slug>", "cover": "cover.jpg", "private": true }`
 
-5. Validate that every `pages[].image` exists, every page has a `paragraphs` array, JSON parses, and the index entry points to the intended slug. Check that page count and image count agree.
-6. Start or restart the local reader with the project’s `开始阅读器.cmd` (or `npm run local`) when the user expects the LAN reader to be available. The reader URL is:
+8. Validate JSON, page order, page/image counts, image existence, paragraph arrays, non-empty `nl`/`zh` pairs, and index-to-folder consistency before opening the reader.
+9. Start or restart the local reader with the project’s `开始阅读器.cmd` (or `npm run local`) when the user expects the LAN reader to be available. The reader URL is:
 
    `http://<computer-or-Tailscale-IP>:5173/Child_book_reading/`
 
-7. Verify the live shelf shows the new book, open it, verify the first text page, image, Dutch text, Chinese translation, speech button, and page navigation. Also check the management page when index visibility matters.
-8. Keep old test books unless the user explicitly asks to delete them. A folder that is absent from `index.json` is not visible to the shelf or management page; deletion must remove both the folder and its index entry.
-9. Send the standard Codex completion phone notification after the book is visible and verified.
+10. Verify the live shelf, first text page, multi-paragraph display, image, Dutch text, Chinese translation, speech button, page navigation, progress, and management-page visibility. Refresh the local network index if a service-worker cache is involved.
+11. Keep old test books unless the user explicitly asks to delete them. A folder that is absent from `index.json` is not visible to the shelf or management page; deletion must remove both the folder and its index entry.
+12. In chat, report only a compact summary, page/paragraph counts, exceptions, and verification status; do not paste the full book text. Send the standard Codex completion phone notification after the book is visible and verified.
 
 ## Required book.json schema
 
