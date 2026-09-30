@@ -11,8 +11,42 @@ import { PDFDocument } from 'pdf-lib'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const privateRoot = path.join(root, 'public', 'private-books')
 const imageProcessor = path.join(root, 'scripts', 'deskew-image.py')
-const upload = multer({ storage: multer.memoryStorage(), limits: { files: 40, fileSize: 15 * 1024 * 1024 } })
+const upload = multer({ storage: multer.memoryStorage(), limits: { files: 40, fileSize: 200 * 1024 * 1024 } })
 const app = express()
+
+async function pdfPageCount(buffer) {
+  const tempDir = await mkdtemp(path.join(tmpdir(), 'child-reading-pdf-'))
+  const inputPath = path.join(tempDir, 'book.pdf')
+  await writeFile(inputPath, buffer)
+  try {
+    try {
+      const pdf = await PDFDocument.load(buffer, { ignoreEncryption: true })
+      return pdf.getPageCount()
+    } catch {}
+    const commands = [
+      process.env.PDFINFO,
+      'C:\\Users\\JASI\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\poppler\\Library\\bin\\pdfinfo.exe',
+      'pdfinfo',
+    ].filter(Boolean)
+    for (const command of commands) {
+      try {
+        const output = await new Promise((resolve, reject) => {
+          const child = spawn(command, [inputPath], { windowsHide: true })
+          let stdout = ''; let stderr = ''
+          child.stdout.on('data', (chunk) => { stdout += chunk.toString() })
+          child.stderr.on('data', (chunk) => { stderr += chunk.toString() })
+          child.on('error', reject)
+          child.on('close', (code) => code === 0 ? resolve(stdout) : reject(new Error(stderr)))
+        })
+        const match = String(output).match(/^Pages:\s*(\d+)/mi)
+        if (match) return Number(match[1])
+      } catch {}
+    }
+    return 1
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
+}
 
 async function saveProcessedImage(file, outputPath) {
   const tempDir = await mkdtemp(path.join(tmpdir(), 'child-reading-'))
@@ -20,11 +54,11 @@ async function saveProcessedImage(file, outputPath) {
   await writeFile(inputPath, file.buffer)
   try {
     await new Promise((resolve, reject) => {
-      const process = spawn(process.env.PYTHON || 'python', [imageProcessor, inputPath, outputPath], { windowsHide: true })
+      const childProcess = spawn(process.env.PYTHON || 'python', [imageProcessor, inputPath, outputPath], { windowsHide: true })
       let error = ''
-      process.stderr.on('data', (chunk) => { error += chunk.toString() })
-      process.on('error', reject)
-      process.on('close', (code) => code === 0 ? resolve() : reject(new Error(error || `图片处理失败（代码 ${code}）`)))
+      childProcess.stderr.on('data', (chunk) => { error += chunk.toString() })
+      childProcess.on('error', reject)
+      childProcess.on('close', (code) => code === 0 ? resolve() : reject(new Error(error || `图片处理失败（代码 ${code}）`)))
     })
   } catch (error) {
     console.warn(`自动裁剪不可用，保留原图：${error.message}`)
@@ -51,8 +85,8 @@ app.post(['/api/upload-book', '/Child_book_reading/api/upload-book'], upload.arr
     let book
     if (pdfUpload) {
       await writeFile(path.join(dir, 'book.pdf'), files[0].buffer)
-      const pdf = await PDFDocument.load(files[0].buffer)
-      pages = Array.from({ length: pdf.getPageCount() }, (_, i) => ({ pdfPage: i + 1, paragraphs: [] }))
+      const pageCount = await pdfPageCount(files[0].buffer)
+      pages = Array.from({ length: pageCount }, (_, i) => ({ pdfPage: i + 1, paragraphs: [] }))
       book = { titleZh, titleNl, type: 'pdf', file: 'book.pdf', pages }
     } else {
       await saveProcessedImage(files[0], path.join(dir, 'cover.jpg'))
@@ -74,6 +108,14 @@ app.post(['/api/upload-book', '/Child_book_reading/api/upload-book'], upload.arr
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
+})
+
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    const message = error.code === 'LIMIT_FILE_SIZE' ? '文件太大，请将单个文件控制在 200MB 以内。' : `上传失败：${error.message}`
+    return res.status(400).json({ error: message })
+  }
+  return next(error)
 })
 
 const vite = await createViteServer({ root, server: { middlewareMode: true }, appType: 'spa' })
