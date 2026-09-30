@@ -1,6 +1,8 @@
 import express from 'express'
 import multer from 'multer'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { spawn } from 'node:child_process'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createServer as createViteServer } from 'vite'
@@ -8,8 +10,29 @@ import { PDFDocument } from 'pdf-lib'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const privateRoot = path.join(root, 'public', 'private-books')
+const imageProcessor = path.join(root, 'scripts', 'deskew-image.py')
 const upload = multer({ storage: multer.memoryStorage(), limits: { files: 40, fileSize: 15 * 1024 * 1024 } })
 const app = express()
+
+async function saveProcessedImage(file, outputPath) {
+  const tempDir = await mkdtemp(path.join(tmpdir(), 'child-reading-'))
+  const inputPath = path.join(tempDir, 'input')
+  await writeFile(inputPath, file.buffer)
+  try {
+    await new Promise((resolve, reject) => {
+      const process = spawn(process.env.PYTHON || 'python', [imageProcessor, inputPath, outputPath], { windowsHide: true })
+      let error = ''
+      process.stderr.on('data', (chunk) => { error += chunk.toString() })
+      process.on('error', reject)
+      process.on('close', (code) => code === 0 ? resolve() : reject(new Error(error || `图片处理失败（代码 ${code}）`)))
+    })
+  } catch (error) {
+    console.warn(`自动裁剪不可用，保留原图：${error.message}`)
+    await writeFile(outputPath, file.buffer)
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
+}
 
 app.post(['/api/upload-book', '/Child_book_reading/api/upload-book'], upload.array('photos', 40), async (req, res) => {
   try {
@@ -32,20 +55,20 @@ app.post(['/api/upload-book', '/Child_book_reading/api/upload-book'], upload.arr
       pages = Array.from({ length: pdf.getPageCount() }, (_, i) => ({ pdfPage: i + 1, paragraphs: [] }))
       book = { titleZh, titleNl, type: 'pdf', file: 'book.pdf', pages }
     } else {
-      await writeFile(path.join(dir, `cover${extension(files[0])}`), files[0].buffer)
+      await saveProcessedImage(files[0], path.join(dir, 'cover.jpg'))
       for (let i = 1; i < files.length; i += 1) {
-        const image = `page-${String(i).padStart(3, '0')}${extension(files[i])}`
-        await writeFile(path.join(dir, image), files[i].buffer)
+        const image = `page-${String(i).padStart(3, '0')}.jpg`
+        await saveProcessedImage(files[i], path.join(dir, image))
         pages.push({ image, paragraphs: [] })
       }
-      book = { titleZh, titleNl, cover: `cover${extension(files[0])}`, pages }
+      book = { titleZh, titleNl, cover: 'cover.jpg', pages }
     }
     await writeFile(path.join(dir, 'book.json'), JSON.stringify(book, null, 2), 'utf8')
     const indexPath = path.join(privateRoot, 'index.json')
     let index = []
     try { index = JSON.parse(await readFile(indexPath, 'utf8')) } catch {}
     index = index.filter((item) => item.slug !== slug)
-    index.push({ slug, cover: pdfUpload ? 'pdf' : `cover${extension(files[0])}`, private: true })
+    index.push({ slug, cover: pdfUpload ? 'pdf' : 'cover.jpg', private: true })
     await writeFile(indexPath, JSON.stringify(index, null, 2), 'utf8')
     res.json({ ok: true, titleNl, pages: pages.length })
   } catch (error) {
