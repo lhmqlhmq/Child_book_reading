@@ -46,9 +46,8 @@ When the user provides a PDF or page photos, process and publish the book in thi
 
 Use zero-padded page filenames (`page-001.jpg`, `page-002.jpg`, ...). The cover is also the first reader page unless the source workflow clearly requires otherwise. Do not put long book text in React source code.
 
-## Local versus GitHub Pages publishing
+## Local-only publishing
 
 - `public/private-books/` is for the local LAN reader and must remain ignored; it is not automatically published to GitHub.
-- `public/books/` is for public/demo books that are intentionally committed and deployed by GitHub Pages.
-- Do not copy family scans, private book images, or private translations into `public/books/` or a public Git commit.
-- GitHub Pages deployment is separate from local private-library publishing. If the user wants a book on the LAN reader, update `public/private-books/index.json` and verify the LAN URL. If the user wants a public/demo book, use `public/books/index.json` instead and explicitly confirm that the content is suitable for publication.
+- Do not copy family scans, private book images, or private translations into a Git commit.
+- GitHub is only a code backup for this project. Do not enable or restore GitHub Pages unless the user explicitly asks to publish a separate public demo.

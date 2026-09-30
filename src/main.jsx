@@ -9,10 +9,10 @@ function useBooks() {
   const [books, setBooks] = useState([])
   useEffect(() => {
     const loadIndex = (path) => fetch(`${base}${path}`).then((r) => r.ok ? r.json() : []).catch(() => [])
-    Promise.all([loadIndex('books/index.json'), loadIndex('private-books/index.json')]).then(async ([publicItems, privateItems]) => {
-      const loaded = (await Promise.all([...publicItems, ...privateItems].map(async (item) => {
+    loadIndex('private-books/index.json').then(async (privateItems) => {
+      const loaded = (await Promise.all(privateItems.map(async (item) => {
         try {
-          const root = item.private ? 'private-books' : 'books'
+          const root = 'private-books'
           const response = await fetch(`${base}${root}/${encodeURIComponent(item.slug)}/book.json`)
           if (!response.ok) return null
           const raw = await response.json()
