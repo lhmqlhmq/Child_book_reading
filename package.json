@@ -10,6 +10,6 @@
     "preview": "vite preview",
     "set-password": "node scripts/set-password.mjs"
   },
-  "dependencies": { "@vitejs/plugin-react": "latest", "vite": "latest", "react": "latest", "react-dom": "latest", "express": "latest", "multer": "latest" },
+  "dependencies": { "@vitejs/plugin-react": "latest", "vite": "latest", "react": "latest", "react-dom": "latest", "express": "latest", "multer": "latest", "pdf-lib": "latest" },
   "devDependencies": {}
 }

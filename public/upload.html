@@ -18,7 +18,8 @@
   <form id="form">
     <label>中文书名<input name="titleZh" required placeholder="例如：卡雷尔，旅途愉快！"></label>
     <label>荷兰语书名<input name="titleNl" required placeholder="例如：Goede reis, Kareltje"></label>
-    <label>照片<input name="photos" type="file" accept="image/*" multiple required></label>
+    <label>照片或 PDF<input name="photos" type="file" accept="image/*,.pdf,application/pdf" multiple required></label>
+    <small>可以选择多张照片，或选择一个 PDF。PDF 请一次只上传一个。</small>
     <button>保存到电脑</button>
   </form>
   <div id="status" class="status" hidden></div>
