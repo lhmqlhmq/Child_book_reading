@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "local": "node server/local-server.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "set-password": "node scripts/set-password.mjs"
   },
-  "dependencies": { "@vitejs/plugin-react": "latest", "vite": "latest", "react": "latest", "react-dom": "latest" },
+  "dependencies": { "@vitejs/plugin-react": "latest", "vite": "latest", "react": "latest", "react-dom": "latest", "express": "latest", "multer": "latest" },
   "devDependencies": {}
 }

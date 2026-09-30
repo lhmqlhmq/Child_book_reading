@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f7efe4"><title>上传新书 · 给孩子读书</title>
+  <style>
+    body{margin:0;background:#f7efe4;color:#382d2a;font-family:system-ui,sans-serif}
+    .card{max-width:520px;margin:24px auto;padding:28px 20px;background:#fffaf5;border-radius:24px;box-shadow:0 10px 30px #805f3d18}
+    h1{margin-top:0}label{display:block;margin:18px 0 7px;font-weight:700}
+    input{width:100%;box-sizing:border-box;padding:12px;border:1px solid #d9c8b8;border-radius:10px;background:#fff;font-size:16px}
+    button{width:100%;margin-top:22px;padding:14px;border:0;border-radius:12px;background:#d97855;color:white;font-size:16px;font-weight:800}
+    small{color:#806f67;line-height:1.5}.status{margin-top:18px;padding:12px;border-radius:10px;background:#f0dfcf}.back{display:inline-block;margin-top:18px;color:#9b5a45}
+  </style>
+</head>
+<body><main class="card">
+  <h1>上传新书</h1>
+  <small>第一张照片作为封面，后面的照片按选择顺序成为内页。照片只保存到这台电脑。</small>
+  <form id="form">
+    <label>中文书名<input name="titleZh" required placeholder="例如：卡雷尔，旅途愉快！"></label>
+    <label>荷兰语书名<input name="titleNl" required placeholder="例如：Goede reis, Kareltje"></label>
+    <label>照片<input name="photos" type="file" accept="image/*" multiple required></label>
+    <button>保存到电脑</button>
+  </form>
+  <div id="status" class="status" hidden></div>
+  <a class="back" href="/Child_book_reading/">← 返回书架</a>
+</main>
+<script>
+  const form=document.querySelector('#form'),status=document.querySelector('#status')
+  form.addEventListener('submit',async(e)=>{e.preventDefault();status.hidden=false;status.textContent='正在保存照片…'
+    try{const r=await fetch('/Child_book_reading/api/upload-book',{method:'POST',body:new FormData(form)});const data=await r.json();if(!r.ok)throw new Error(data.error||'上传失败');status.textContent=`已保存《${data.titleNl}》，共 ${data.pages} 页。返回书架后即可看到。`;form.reset()}
+    catch(err){status.textContent=err.message}
+  })
+</script></body></html>
