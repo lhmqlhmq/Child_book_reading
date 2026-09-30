@@ -13,6 +13,7 @@ const privateRoot = path.join(root, 'public', 'private-books')
 const imageProcessor = path.join(root, 'scripts', 'deskew-image.py')
 const upload = multer({ storage: multer.memoryStorage(), limits: { files: 40, fileSize: 200 * 1024 * 1024 } })
 const app = express()
+app.use(express.json())
 
 async function pdfPageCount(buffer) {
   const tempDir = await mkdtemp(path.join(tmpdir(), 'child-reading-pdf-'))
@@ -107,6 +108,38 @@ app.post(['/api/upload-book', '/Child_book_reading/api/upload-book'], upload.arr
     res.json({ ok: true, titleNl, pages: pages.length })
   } catch (error) {
     res.status(500).json({ error: error.message })
+  }
+})
+
+app.patch(['/api/books/:slug', '/Child_book_reading/api/books/:slug'], async (req, res) => {
+  try {
+    const { slug } = req.params
+    if (!/^[a-z0-9-]+$/.test(slug)) return res.status(400).json({ error: '书籍标识无效。' })
+    const bookPath = path.join(privateRoot, slug, 'book.json')
+    const book = JSON.parse(await readFile(bookPath, 'utf8'))
+    const titleZh = String(req.body.titleZh || '').trim()
+    const titleNl = String(req.body.titleNl || '').trim()
+    if (!titleZh || !titleNl) return res.status(400).json({ error: '中荷书名都不能为空。' })
+    book.titleZh = titleZh
+    book.titleNl = titleNl
+    await writeFile(bookPath, JSON.stringify(book, null, 2), 'utf8')
+    res.json({ ok: true, titleZh, titleNl })
+  } catch (error) {
+    res.status(error.code === 'ENOENT' ? 404 : 500).json({ error: error.code === 'ENOENT' ? '找不到这本书。' : error.message })
+  }
+})
+
+app.delete(['/api/books/:slug', '/Child_book_reading/api/books/:slug'], async (req, res) => {
+  try {
+    const { slug } = req.params
+    if (!/^[a-z0-9-]+$/.test(slug)) return res.status(400).json({ error: '书籍标识无效。' })
+    await rm(path.join(privateRoot, slug), { recursive: true, force: false })
+    const indexPath = path.join(privateRoot, 'index.json')
+    const index = JSON.parse(await readFile(indexPath, 'utf8')).filter((item) => item.slug !== slug)
+    await writeFile(indexPath, JSON.stringify(index, null, 2), 'utf8')
+    res.json({ ok: true })
+  } catch (error) {
+    res.status(error.code === 'ENOENT' ? 404 : 500).json({ error: error.code === 'ENOENT' ? '找不到这本书。' : error.message })
   }
 })
 

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f7efe4"><title>管理书籍 · 给孩子读书</title>
+  <style>
+    body{margin:0;background:#f7efe4;color:#382d2a;font-family:system-ui,sans-serif}.card{max-width:620px;margin:24px auto;padding:28px 20px;background:#fffaf5;border-radius:24px;box-shadow:0 10px 30px #805f3d18}h1{margin-top:0}.book{padding:18px 0;border-top:1px solid #eadbce}.book:first-child{border-top:0}.book-title{font-size:18px;font-weight:800;margin-bottom:12px}.book input{display:block;width:100%;box-sizing:border-box;margin:8px 0;padding:12px;border:1px solid #d9c8b8;border-radius:10px;background:#fff;font-size:16px}.actions{display:flex;gap:10px}.actions button{flex:1;margin-top:8px;padding:12px;border:0;border-radius:12px;background:#d97855;color:#fff;font-size:15px;font-weight:800}.actions .delete{background:#ead0c8;color:#9b443a}.status{margin:12px 0;padding:12px;border-radius:10px;background:#f0dfcf}.back{display:inline-block;margin-top:18px;color:#9b5a45}
+  </style>
+</head>
+<body><main class="card"><h1>管理本地书籍</h1><div id="status" class="status">正在加载…</div><section id="books"></section><a class="back" href="/Child_book_reading/">← 返回书架</a></main>
+<script>
+const booksEl=document.querySelector('#books'),status=document.querySelector('#status')
+const api=(path,options)=>fetch('/Child_book_reading'+path,options).then(async r=>{const data=await r.json();if(!r.ok)throw new Error(data.error||'操作失败');return data})
+async function load(){try{const index=await fetch('/Child_book_reading/private-books/index.json').then(r=>r.json());const books=await Promise.all(index.map(async item=>({item,data:await fetch(`/Child_book_reading/private-books/${encodeURIComponent(item.slug)}/book.json`).then(r=>r.json())})));status.hidden=true;booksEl.innerHTML=books.length?books.map(({item,data})=>`<article class="book" data-slug="${item.slug}"><div class="book-title">${escapeHtml(data.titleZh)} · ${escapeHtml(data.titleNl)}</div><input class="zh" value="${escapeAttr(data.titleZh)}" aria-label="中文书名"><input class="nl" value="${escapeAttr(data.titleNl)}" aria-label="荷兰语书名"><div class="actions"><button class="save">保存名称</button><button class="delete">删除整本书</button></div></article>`).join(''):'<p>还没有本地书籍。</p>'}catch(e){status.hidden=false;status.textContent=e.message}}
+function escapeHtml(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function escapeAttr(value){return escapeHtml(value)}
+booksEl.addEventListener('click',async(e)=>{const book=e.target.closest('.book');if(!book)return;const slug=book.dataset.slug;if(e.target.classList.contains('save')){try{await api(`/api/books/${encodeURIComponent(slug)}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({titleZh:book.querySelector('.zh').value,titleNl:book.querySelector('.nl').value})});status.hidden=false;status.textContent='书名已保存。';setTimeout(()=>status.hidden=true,1800)}catch(err){status.hidden=false;status.textContent=err.message}}if(e.target.classList.contains('delete')){if(!confirm('确定删除这整本书及其所有页面吗？此操作无法通过网页撤销。'))return;try{await api(`/api/books/${encodeURIComponent(slug)}`,{method:'DELETE'});book.remove();status.hidden=false;status.textContent='书籍已删除。'}catch(err){status.hidden=false;status.textContent=err.message}}})
+load()
+</script></body></html>
