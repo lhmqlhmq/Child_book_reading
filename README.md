@@ -19,9 +19,24 @@ npm run set-password -- "你的家庭密码"
 
 然后提交 `src/passwordHash.js` 的变化。首次发布前请设置你自己的家庭密码。
 
-## 添加新书
+## 添加并发布家庭新书
 
-新建 `public/books/<slug>/book.json`、`cover.svg/jpg` 和页面图片，然后把 `{ "slug": "<slug>", "cover": "cover..." }` 加入 `public/books/index.json`。不需要修改 React 代码。
+家庭书籍必须写入 `public/private-books/<slug>/`，并在 `public/private-books/index.json` 注册。书籍目录至少包含：
+
+```text
+public/private-books/<slug>/
+  book.json
+  cover.jpg
+  page-001.jpg
+  page-002.jpg
+  ...
+```
+
+`book.json` 使用 `titleZh`、`titleNl`、`cover` 和 `pages[].paragraphs[]` 字段；每个段落包含 `nl` 和 `zh`。新增书不需要修改 React 代码，但必须更新索引并验证 LAN 书架显示新书。
+
+完整的 PDF/照片处理、索引、验证和旧测试书处理规则见项目根目录 `AGENTS.md`。
+
+公共/演示书才放入 `public/books/<slug>/` 并更新 `public/books/index.json`。不要把家庭扫描件、私有页面图片或私有翻译放入 `public/books/`。
 
 ## 家庭 Wi-Fi 本地使用
 

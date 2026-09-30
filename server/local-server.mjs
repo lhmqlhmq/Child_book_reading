@@ -70,6 +70,7 @@ async function saveProcessedImage(file, outputPath) {
 }
 
 app.post(['/api/upload-book', '/Child_book_reading/api/upload-book'], upload.array('photos', 40), async (req, res) => {
+  let dir
   try {
     const titleZh = String(req.body.titleZh || '').trim()
     const titleNl = String(req.body.titleNl || '').trim()
@@ -80,7 +81,7 @@ app.post(['/api/upload-book', '/Child_book_reading/api/upload-book'], upload.arr
     if (!pdfUpload && files.length < 2) return res.status(400).json({ error: '照片模式请至少上传封面和一张内页；PDF 模式请一次只上传一个 PDF。' })
     if (files.some((file) => file.mimetype === 'application/pdf' || extension(file) === '.pdf') && !pdfUpload) return res.status(400).json({ error: 'PDF 请一次只上传一个，不能与照片混合上传。' })
     const slug = `${titleNl.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'new-book'}-${Date.now().toString(36)}`
-    const dir = path.join(privateRoot, slug)
+    dir = path.join(privateRoot, slug)
     await mkdir(dir, { recursive: true })
     let pages = []
     let book
@@ -107,6 +108,7 @@ app.post(['/api/upload-book', '/Child_book_reading/api/upload-book'], upload.arr
     await writeFile(indexPath, JSON.stringify(index, null, 2), 'utf8')
     res.json({ ok: true, titleNl, pages: pages.length })
   } catch (error) {
+    if (dir) await rm(dir, { recursive: true, force: true }).catch(() => {})
     res.status(500).json({ error: error.message })
   }
 })
