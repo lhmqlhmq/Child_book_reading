@@ -48,7 +48,7 @@ function App() {
 }
 
 function Shelf({ books, onOpen }) {
-  return <main className="page-shell"><header className="topbar"><div><span className="eyebrow">FAMILY READING</span><h1>我的书架</h1></div><div className="book-count">{books.length} 本书</div></header>{import.meta.env.DEV && <div className="shelf-links"><a className="upload-link" href="/Child_book_reading/upload.html">＋ 用手机上传新书</a><a className="upload-link" href="/Child_book_reading/manage.html">⚙ 管理书籍</a></div>}<section className="shelf-grid">{books.map((book) => <BookCard key={book.slug} book={book} onClick={() => onOpen(book)} />)}</section>{!books.length && <p className="loading">正在加载书架…</p>}<footer>本地家庭阅读 · 荷兰语朗读由浏览器提供</footer></main>
+  return <main className="page-shell"><header className="topbar"><div><span className="eyebrow">FAMILY READING</span><h1>我的书架</h1></div><div className="book-count">{books.length} 本书</div></header>{import.meta.env.DEV && <div className="shelf-links"><a className="upload-link" href="/Child_book_reading/upload.html">＋ 用手机上传新书</a><a className="upload-link" href="/Child_book_reading/manage.html">⚙ 管理书籍</a><a className="upload-link" href="/Child_book_reading/online.html">🎧 在线故事</a></div>}<section className="shelf-grid">{books.map((book) => <BookCard key={book.slug} book={book} onClick={() => onOpen(book)} />)}</section>{!books.length && <p className="loading">正在加载书架…</p>}<footer>本地家庭阅读 · 荷兰语朗读由浏览器提供</footer></main>
 }
 
 function BookCard({ book, onClick }) {
