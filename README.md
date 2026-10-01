@@ -30,6 +30,8 @@ public/private-books/<slug>/
 
 真实书籍放在 `public/private-books/`，该目录已被 Git 忽略，不会推送到 GitHub。双击根目录的 `开始阅读器.cmd`，电脑会启动本地网站并显示一个家庭 Wi-Fi 地址；手机连接同一个 Wi-Fi 后打开该地址即可。电脑需要保持开机并让启动窗口保持运行。
 
+项目也已配置 Windows 后台任务 `Child Reading Local Server`：登录电脑时自动启动，并每天 18:45 再检查一次。这样通常不需要手动打开阅读器，晚上使用时直接用手机访问即可。电脑关机或睡眠时，手机仍然无法访问。
+
 ## GitHub 仓库的用途
 
 GitHub 只用于保存程序代码和版本备份。家庭书籍位于被 Git 忽略的本地目录，不会上传。当前不使用 GitHub Pages，也不需要配置公开网站。

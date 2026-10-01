@@ -2,3 +2,5 @@ node_modules/
 dist/
 *.log
 public/private-books/
+local-reader.log
+local-reader-error.log
