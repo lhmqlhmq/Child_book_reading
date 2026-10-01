@@ -1,0 +1,22 @@
+{
+  "clusters": [
+    {
+      "id": "borre-leesclub",
+      "name": "Borre Leesclub",
+      "description": "荷兰语在线故事 · borre.nl",
+      "stories": [
+        { "titleNl": "Borre en de mol", "titleZh": "Borre 和鼹鼠", "url": "https://borre.nl/luister-mol/" },
+        { "titleNl": "Borre en de loopneus", "titleZh": "Borre 和流鼻涕", "url": "https://borre.nl/luister-loopneus/" },
+        { "titleNl": "Borre en de boterhammen met pindakaas", "titleZh": "Borre 和花生酱三明治", "url": "https://borre.nl/luister-boterhammen/" },
+        { "titleNl": "Kuba gaat naar de tandarts", "titleZh": "Kuba 去看牙医", "url": "https://borre.nl/luister-tandarts/" },
+        { "titleNl": "Kuba en de seizoenen", "titleZh": "Kuba 和四季", "url": "https://borre.nl/luister-seizoenen/" },
+        { "titleNl": "Borre gaat op zwemles", "titleZh": "Borre 去学游泳", "url": "https://borre.nl/luister-zwemles/" },
+        { "titleNl": "Borre en de glinsterdinges", "titleZh": "Borre 和闪闪发光的东西", "url": "https://borre.nl/luister-glinsterdinges/" },
+        { "titleNl": "Kuba telt tot tien", "titleZh": "Kuba 数到十", "url": "https://borre.nl/luister-tien/" },
+        { "titleNl": "Borre redt een poesje", "titleZh": "Borre 救小猫", "url": "https://borre.nl/luister-het-poesje/" },
+        { "titleNl": "Borre en het raadselmannetje", "titleZh": "Borre 和谜语小人", "url": "https://borre.nl/luister-raadselmannetje/" },
+        { "titleNl": "Borre en de robotmaaier", "titleZh": "Borre 和割草机器人", "url": "https://borre.nl/luister-robotmaaier/" }
+      ]
+    }
+  ]
+}

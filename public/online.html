@@ -11,11 +11,13 @@
     *{box-sizing:border-box}body{margin:0}.page{max-width:980px;margin:0 auto;padding:28px 18px 48px}
     h1{font-size:clamp(2rem,6vw,3.5rem);margin:0 0 8px}.intro{color:#7b6254;margin:0 0 22px}
     .back{display:inline-block;color:#885844;margin-bottom:22px}
+    .search{width:100%;padding:13px 16px;border:1px solid #dfc7b5;border-radius:14px;background:#fffaf5;font:inherit;margin:0 0 28px}
+    .cluster{margin:0 0 30px}.cluster h2{font-size:1.3rem;margin:0 0 4px}.cluster p{color:#8b6b59;margin:0 0 12px}
     .stories{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     .story{background:#fffaf5;border:1px solid #ead8c7;border-radius:18px;box-shadow:0 8px 24px #5b32120d;overflow:hidden}
     .story summary{cursor:pointer;list-style:none;padding:17px 18px;font-size:1.05rem;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:12px}
     .story summary::-webkit-details-marker{display:none}.story summary::after{content:'＋';font-size:1.35rem;color:#c66d4d}.story[open] summary::after{content:'−'}
-    .story-content{padding:0 14px 14px}.story iframe{display:block;width:100%;height:520px;border:0;border-radius:14px;background:#f1e2d2}
+    .story-content{padding:0 14px 14px}.story iframe{display:block;width:100%;height:520px;border:0;border-radius:14px;background:#f1e2d2}.placeholder{padding:30px 12px;text-align:center;color:#8b6b59;background:#f1e2d2;border-radius:14px}
     .open{display:inline-block;margin-top:12px;padding:10px 15px;border-radius:999px;background:#db7a55;color:#fff;text-decoration:none;font-weight:700}
     @media(max-width:600px){.page{padding:20px 12px 34px}.stories{grid-template-columns:1fr}.story summary{padding:15px}.story-content{padding:0 10px 10px}.story iframe{height:480px}}
   </style>
@@ -24,12 +26,65 @@
   <main class="page">
     <a class="back" href="/Child_book_reading/">← 返回书架</a>
     <h1>在线故事</h1>
-    <p class="intro">故事默认折叠，不会同时占满页面或加载所有网站。点击一个故事后，可在这里阅读和播放；如果没有显示，请点击“打开原网站”。</p>
-    <section class="stories">
-      <details class="story"><summary>Luister Mol</summary><div class="story-content"><iframe src="https://borre.nl/luister-mol/" title="Luister Mol 在线故事" loading="lazy"></iframe><a class="open" href="https://borre.nl/luister-mol/" target="_blank" rel="noopener noreferrer">打开原网站</a></div></details>
-      <details class="story"><summary>Luister Loopneus</summary><div class="story-content"><iframe src="https://borre.nl/luister-loopneus/" title="Luister Loopneus 在线故事" loading="lazy"></iframe><a class="open" href="https://borre.nl/luister-loopneus/" target="_blank" rel="noopener noreferrer">打开原网站</a></div></details>
-      <details class="story"><summary>Luister Boterhammen</summary><div class="story-content"><iframe src="https://borre.nl/luister-boterhammen/" title="Luister Boterhammen 在线故事" loading="lazy"></iframe><a class="open" href="https://borre.nl/luister-boterhammen/" target="_blank" rel="noopener noreferrer">打开原网站</a></div></details>
-    </section>
+    <p class="intro">故事按来源平台分组。每本书显示荷兰语书名和中文翻译；点击故事后才加载原网站，避免页面过长和同时加载大量内容。</p>
+    <input id="search" class="search" type="search" placeholder="搜索荷兰语或中文书名…" aria-label="搜索在线故事">
+    <div id="clusters"><p class="placeholder">正在加载故事目录…</p></div>
   </main>
+  <script>
+    const root = document.getElementById('clusters')
+    const search = document.getElementById('search')
+    let clusters = []
+    const makeStory = (story) => {
+      const details = document.createElement('details')
+      details.className = 'story'
+      const summary = document.createElement('summary')
+      summary.innerHTML = `<span>${story.titleZh}<br><small>${story.titleNl}</small></span>`
+      const content = document.createElement('div')
+      content.className = 'story-content'
+      const placeholder = document.createElement('div')
+      placeholder.className = 'placeholder'
+      placeholder.textContent = '展开后加载原网站…'
+      content.append(placeholder)
+      const open = document.createElement('a')
+      open.className = 'open'
+      open.href = story.url
+      open.target = '_blank'
+      open.rel = 'noopener noreferrer'
+      open.textContent = '打开原网站'
+      content.append(open)
+      details.append(summary, content)
+      details.addEventListener('toggle', () => {
+        if (!details.open || details.dataset.loaded) return
+        const frame = document.createElement('iframe')
+        frame.src = story.url
+        frame.title = `${story.titleNl} 在线故事`
+        frame.loading = 'lazy'
+        content.replaceChild(frame, placeholder)
+        details.dataset.loaded = 'true'
+      })
+      return details
+    }
+    function render() {
+      const term = search.value.trim().toLowerCase()
+      root.replaceChildren()
+      let visible = 0
+      clusters.forEach((cluster) => {
+        const stories = cluster.stories.filter((story) => `${story.titleNl} ${story.titleZh}`.toLowerCase().includes(term))
+        if (!stories.length) return
+        visible += stories.length
+        const section = document.createElement('section')
+        section.className = 'cluster'
+        section.innerHTML = `<h2>${cluster.name}</h2><p>${cluster.description || ''}</p>`
+        const list = document.createElement('div')
+        list.className = 'stories'
+        stories.forEach((story) => list.append(makeStory(story)))
+        section.append(list)
+        root.append(section)
+      })
+      if (!visible) root.innerHTML = '<p class="placeholder">没有找到匹配的故事。</p>'
+    }
+    fetch('/Child_book_reading/online-stories.json', { cache: 'no-store' }).then((r) => r.json()).then((data) => { clusters = data.clusters || []; render() }).catch(() => { root.innerHTML = '<p class="placeholder">故事目录暂时无法读取，请刷新页面。</p>' })
+    search.addEventListener('input', render)
+  </script>
 </body>
 </html>
